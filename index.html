@@ -343,16 +343,22 @@ let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 let selectedMerchant = null;
 
-async function loadExpenses(){
+function loadExpenses(){
   try{
-    const res = await window.storage.get('expenses-v1', false);
-    expenses = res ? JSON.parse(res.value) : [];
-  }catch(e){ expenses = []; }
+    const raw = localStorage.getItem('expenses-v1');
+    expenses = raw ? JSON.parse(raw) : [];
+  }catch(e){
+    console.error('load failed', e);
+    expenses = [];
+  }
   render();
 }
-async function saveExpenses(){
-  try{ await window.storage.set('expenses-v1', JSON.stringify(expenses), false); }
-  catch(e){ console.error('save failed', e); }
+function saveExpenses(){
+  try{
+    localStorage.setItem('expenses-v1', JSON.stringify(expenses));
+  }catch(e){
+    console.error('save failed', e);
+  }
 }
 
 function todayISO(){ return new Date().toISOString().slice(0,10); }
