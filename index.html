@@ -343,16 +343,39 @@ let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 let selectedMerchant = null;
 
-async function loadExpenses(){
-  try{
-    const res = await window.storage.get('expenses-v1', false);
-    expenses = res ? JSON.parse(res.value) : [];
-  }catch(e){ expenses = []; }
+function loadExpenses(){
+  try {
+    const data = localStorage.getItem('expenses-v1');
+    if (data !== null) {
+      expenses = JSON.parse(data);
+    } else if (window.storage && typeof window.storage.get === 'function') {
+      window.storage.get('expenses-v1', false).then(res => {
+        if (res && res.value) {
+          expenses = JSON.parse(res.value);
+          localStorage.setItem('expenses-v1', res.value);
+          render();
+        }
+      }).catch(() => {});
+    } else {
+      expenses = [];
+    }
+  } catch(e) {
+    console.error('load failed', e);
+    expenses = [];
+  }
   render();
 }
-async function saveExpenses(){
-  try{ await window.storage.set('expenses-v1', JSON.stringify(expenses), false); }
-  catch(e){ console.error('save failed', e); }
+
+function saveExpenses(){
+  try {
+    const serialized = JSON.stringify(expenses);
+    localStorage.setItem('expenses-v1', serialized);
+    if (window.storage && typeof window.storage.set === 'function') {
+      window.storage.set('expenses-v1', serialized, false).catch(() => {});
+    }
+  } catch(e) {
+    console.error('save failed', e);
+  }
 }
 
 function todayISO(){ return new Date().toISOString().slice(0,10); }
